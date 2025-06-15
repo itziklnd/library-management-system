@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }} - Library Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h1 class="card-title">{{ book.title }}</h1>
+                <h4 class="card-subtitle mb-3 text-muted">By {{ book.author }}</h4>
+                <p class="card-text">
+                    <strong>ISBN:</strong> {{ book.isbn }}<br>
+                    <strong>Status:</strong> 
+                    {% if book.available %}
+                    <span class="badge bg-success">Available</span>
+                    {% else %}
+                    <span class="badge bg-danger">Borrowed</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Reviews</h3>
+            </div>
+            <div class="card-body">
+                {% if current_user.is_authenticated %}
+                <form method="POST" action="{{ url_for('add_review', book_id=book.id) }}" class="mb-4">
+                    <div class="mb-3">
+                        <label for="rating" class="form-label">Rating</label>
+                        <select class="form-select" id="rating" name="rating" required>
+                            <option value="">Select rating</option>
+                            <option value="1">1 Star</option>
+                            <option value="2">2 Stars</option>
+                            <option value="3">3 Stars</option>
+                            <option value="4">4 Stars</option>
+                            <option value="5">5 Stars</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="review_text" class="form-label">Review</label>
+                        <textarea class="form-control" id="review_text" name="review_text" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                </form>
+                {% else %}
+                <div class="alert alert-info">
+                    Please <a href="{{ url_for('login') }}">login</a> to submit a review.
+                </div>
+                {% endif %}
+
+                <div class="reviews">
+                    {% for review in reviews %}
+                    <div class="review mb-3 pb-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="mb-0">{{ review.username }}</h5>
+                            <div class="rating">
+                                {% for i in range(review.rating) %}★{% endfor %}
+                                {% for i in range(5 - review.rating) %}☆{% endfor %}
+                            </div>
+                        </div>
+                        <p class="mb-1">{{ review.review_text }}</p>
+                        <small class="text-muted">{{ review.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No reviews yet. Be the first to review this book!
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
