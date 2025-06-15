@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Borrowing - Library Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Manage Book Borrowing</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Borrow a Book</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="book_id" class="form-label">Select Book</label>
+                            <select class="form-select" id="book_id" name="book_id" required>
+                                <option value="">Choose a book...</option>
+                                {% for book in books %}
+                                <option value="{{ book.BookID }}">{{ book.BookName }} by {{ book.Author }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="borrower_name" class="form-label">Borrower's Name</label>
+                            <input type="text" class="form-control" id="borrower_name" name="borrower_name" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Process Borrowing</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Available Books</h3>
+                </div>
+                <div class="card-body">
+                    {% if books %}
+                    <div class="list-group">
+                        {% for book in books %}
+                        <div class="list-group-item">
+                            <h5 class="mb-1">{{ book.BookName }}</h5>
+                            <p class="mb-1">By {{ book.Author }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No books available for borrowing.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -63,46 +63,97 @@ def logout():
 # Book routes
 @app.route('/')
 def index():
-    books = Book.get_all()
-    return render_template('index.html', books=books)
-
-@app.route('/search')
-def search():
     query = request.args.get('q', '')
-    books = Book.search(query) if query else []
-    return render_template('search.html', books=books, query=query)
+    if query:
+        # Search for books
+        sql_query = """
+            SELECT * FROM books 
+            WHERE BookName LIKE %s OR Author LIKE %s
+        """
+        search_term = f"%{query}%"
+        books = execute_query(sql_query, (search_term, search_term), fetch=True)
+    else:
+        # List all books
+        books = execute_query("SELECT * FROM books", fetch=True)
+    
+    return render_template('index.html', books=books, query=query)
 
-@app.route('/book/<int:book_id>')
-def book_detail(book_id):
-    book = Book.get_by_id(book_id)
-    if not book:
-        flash('Book not found')
+@app.route('/review', methods=['GET', 'POST'])
+def review():
+    if request.method == 'POST':
+        book_name = request.form['book_name']
+        rating = request.form['rating']
+        comment = request.form['comment']
+        
+        query = """
+            INSERT INTO reviews (BookName, Rating, Comment)
+            VALUES (%s, %s, %s)
+        """
+        execute_query(query, (book_name, rating, comment))
+        flash('Review submitted successfully!')
         return redirect(url_for('index'))
     
-    # Get reviews for the book
-    query = """
-        SELECT r.*, u.username 
-        FROM reviews r 
-        JOIN users u ON r.user_id = u.id 
-        WHERE r.book_id = %s
-    """
-    reviews = execute_query(query, (book_id,), fetch=True)
-    
-    return render_template('book_detail.html', book=book, reviews=reviews)
+    return render_template('review.html')
 
-@app.route('/review/<int:book_id>', methods=['POST'])
-@login_required
-def add_review(book_id):
-    rating = request.form.get('rating')
-    review_text = request.form.get('review_text')
+@app.route('/admin')
+def admin():
+    code = request.args.get('code')
+    if code != 'LIB2025':
+        return render_template('denied.html')
+    return render_template('admin.html')
+
+@app.route('/admin/borrow', methods=['GET', 'POST'])
+def admin_borrow():
+    code = request.args.get('code')
+    if code != 'LIB2025':
+        return render_template('denied.html')
     
-    query = """
-        INSERT INTO reviews (book_id, user_id, rating, review_text)
-        VALUES (%s, %s, %s, %s)
-    """
-    execute_query(query, (book_id, current_user.id, rating, review_text))
-    flash('Review added successfully')
-    return redirect(url_for('book_detail', book_id=book_id))
+    if request.method == 'POST':
+        book_id = request.form['book_id']
+        borrower_name = request.form['borrower_name']
+        
+        # Update book availability
+        execute_query(
+            "UPDATE books SET IsAvailable = FALSE WHERE BookID = %s",
+            (book_id,)
+        )
+        
+        # Log the borrowing
+        execute_query(
+            "INSERT INTO borrowed_books (BookID, BorrowerName) VALUES (%s, %s)",
+            (book_id, borrower_name)
+        )
+        
+        flash('Book borrowed successfully!')
+        return redirect(url_for('admin_borrow', code='LIB2025'))
+    
+    # Get available books
+    books = execute_query(
+        "SELECT * FROM books WHERE IsAvailable = TRUE",
+        fetch=True
+    )
+    
+    return render_template('admin_borrow.html', books=books)
+
+@app.route('/admin/add-book', methods=['GET', 'POST'])
+def admin_add_book():
+    code = request.args.get('code')
+    if code != 'LIB2025':
+        return render_template('denied.html')
+    
+    if request.method == 'POST':
+        book_name = request.form['book_name']
+        author = request.form['author']
+        
+        execute_query(
+            "INSERT INTO books (BookName, Author) VALUES (%s, %s)",
+            (book_name, author)
+        )
+        
+        flash('Book added successfully!')
+        return redirect(url_for('admin_add_book', code='LIB2025'))
+    
+    return render_template('admin_add_book.html')
 
 # Librarian routes
 @app.route('/librarian/books', methods=['GET', 'POST'])

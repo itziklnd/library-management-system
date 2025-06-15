@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Library Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Admin Dashboard</h1>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Manage Book Borrowing</h5>
+                    <p class="card-text">Process book borrowings and returns.</p>
+                    <a href="{{ url_for('admin_borrow', code='LIB2025') }}" class="btn btn-primary">Go to Borrowing</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Add New Book</h5>
+                    <p class="card-text">Add new books to the library catalog.</p>
+                    <a href="{{ url_for('admin_add_book', code='LIB2025') }}" class="btn btn-primary">Add Book</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
